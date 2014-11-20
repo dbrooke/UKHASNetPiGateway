@@ -11,11 +11,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <gertboard.h>
 
 #include "rfm69.h"
 #include "rfm69config.h"
+
+#define RFM69_RESET_PIN 7  // RasPi GPIO7 Pin
 
     volatile uint8_t    _mode;
 
@@ -163,6 +166,18 @@ boolean rfm69_init(int chan)
         fprintf(stderr, "Failed to open SPI port.  Try loading spi library with 'gpio load spi'");
         return false;
     }
+
+    // Reset device
+    // first drive pin high
+    pinMode(RFM69_RESET_PIN, OUTPUT);
+    digitalWrite(RFM69_RESET_PIN, HIGH);
+    // pause for 100 microseconds
+    usleep(100);
+    // release pin
+    pullUpDnControl(RFM69_RESET_PIN, PUD_OFF);
+    pinMode(RFM69_RESET_PIN, INPUT);
+    // pause for 5 ms
+    usleep(5000);
 
     // Check for device presence
     if (spiRead(RFM69_REG_10_VERSION) != 0x24)
