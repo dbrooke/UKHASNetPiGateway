@@ -46,6 +46,7 @@
     volatile uint16_t   _txGood;
 
     volatile int        _lastRssi;
+    volatile int        _floorRssi;
 
 void spiWrite(uint8_t reg, uint8_t val)
 {
@@ -228,16 +229,19 @@ void rfm69_handleInterrupt()
         _lastRssi = rssiRead();
         // PAYLOADREADY (incoming packet)
         if (spiRead(RFM69_REG_28_IRQ_FLAGS2) & RF_IRQFLAGS2_PAYLOADREADY)
-		{	
+        {
             _bufLen = spiRead(RFM69_REG_00_FIFO);
             spiBurstRead(RFM69_REG_00_FIFO, _buf, RFM69_FIFO_SIZE); // Read out full fifo
             _rxGood++;
             _rxBufValid = true;
-			// spiWrite(RFM69_REG_28_IRQ_FLAGS2, spiRead(RFM69_REG_28_IRQ_FLAGS2) & ~RF_IRQFLAGS2_PAYLOADREADY);
+            // spiWrite(RFM69_REG_28_IRQ_FLAGS2, spiRead(RFM69_REG_28_IRQ_FLAGS2) & ~RF_IRQFLAGS2_PAYLOADREADY);
         }
+        // read noise floor and set RSSI threshold
+        _floorRssi = rssiMeasure();
+    }
     // TX
-    } else if(_mode == RFM69_MODE_TX) {
-    
+    else if(_mode == RFM69_MODE_TX) {
+
         // PacketSent
         if(spiRead(RFM69_REG_28_IRQ_FLAGS2) & RF_IRQFLAGS2_PACKETSENT) {
             _txGood++;
@@ -272,6 +276,28 @@ void RFM69::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len)
 int rssiRead()
 {
     return -spiRead(RFM69_REG_24_RSSI_VALUE)/2;
+}
+
+int rssiMeasure()
+{
+    int count = 0;
+    uint8_t rssi_val, threshold_val;
+
+    spiWrite(RFM69_REG_29_RSSI_THRESHOLD, 0xff);
+    spiWrite(RFM69_REG_23_RSSI_CONFIG, RF_RSSI_START);
+    while((spiRead(RFM69_REG_23_RSSI_CONFIG) & RF_RSSI_DONE) == 0)
+    {
+        printf(",");
+        if(count++ > 100) {
+            return 0;
+        }
+    }
+    rssi_val = spiRead(RFM69_REG_24_RSSI_VALUE);
+    threshold_val = rssi_val - 8;
+    //printf("threshold value %d\n", threshold_val);
+    spiWrite(RFM69_REG_29_RSSI_THRESHOLD, threshold_val);
+    spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
+    return -rssi_val/2;
 }
 
 uint8_t rfmM69_recv(uint8_t* buf, uint8_t len)
