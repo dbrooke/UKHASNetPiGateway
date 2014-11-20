@@ -277,21 +277,25 @@ int rssiRead()
 uint8_t rfmM69_recv(uint8_t* buf, uint8_t len)
 {
     // if (!available())
-	if (_bufLen == 0)
-        return 0;
-		
-    // noInterrupts();   // Disable Interrupts
-	
-    if (len > _bufLen)
-	{
-        len = _bufLen;
-	}
-    memcpy(buf, _buf, len);
-	buf[len] = '\0';
+    if (_bufLen == 0)
+    {
+        len = 0;
+    }
+    else
+    {
+        // noInterrupts();   // Disable Interrupts
+
+        if (len > _bufLen)
+        {
+            len = _bufLen;
+        }
+        memcpy(buf, _buf, len);
+    }
+    buf[len] = '\0';
     clearRxBuf();
-	
+
     // interrupts();     // Enable Interrupts
-	
+
     return len;
 }
 
