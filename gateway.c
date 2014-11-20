@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <curl/curl.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
@@ -81,7 +82,42 @@ char *Now(void)
   
   return buffer;
 }
-	
+
+void UploadPacket(char *Packet)
+{
+	CURL *curl;
+	CURLcode res;
+	char PostFields[200];
+
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	/* get a curl handle */
+	curl = curl_easy_init();
+	if (curl)
+	{
+		/* First set the URL that is about to receive our POST */
+		curl_easy_setopt(curl, CURLOPT_URL, "http://www.ukhas.net/api/upload");
+
+		/* Now specify the POST data */
+		sprintf(PostFields, "origin=DBPG&data=%s", Packet);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostFields);
+
+		/* Perform the request, res will get the return code */
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK)
+		{
+			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+		}
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+	}
+
+	curl_global_cleanup();
+}
+
 int main(int argc, char **argv)
 {
 	char Message[65], Data[100], Command[200], Telemetry[100], *Bracket, *Start;
@@ -104,22 +140,8 @@ int main(int argc, char **argv)
 			printf ("Data available - %d bytes\n", Bytes);
 			printf ("Line = %s\n", Message);
 
-			// 3wL51.95023,-2.54445T0R0[DA1]
-		
-			/*
-			// Add our ID to the end of the path
-			if (Bracket = strrchr(Message, ']'))
-			{
-				*Bracket = '\0';
-				sprintf(Data, "%s,DA0]", Message);
-				printf("Data = %s\n", Data);
-			}
-			*/
-
 			// UKHASNet upload
-			sprintf(Command, "wget -O ukhasnet.txt \"http://www.ukhas.net/api/upload\" --post-data \"origin=DBPG&data=%s\"",	Message);
-			printf("%s\n", Command);
-			system(Command);
+			UploadPacket(Message);
 			
 #if 0
 			// Habitat upload
