@@ -111,8 +111,12 @@ void spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len)
 void setMode(uint8_t newMode)
 {
     spiWrite(RFM69_REG_01_OPMODE, (spiRead(RFM69_REG_01_OPMODE) & 0xE3) | newMode);
-	_mode = newMode;
-	printf ("Mode = %d\n", spiRead(RFM69_REG_01_OPMODE));
+    while((spiRead(RFM69_REG_27_IRQ_FLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0)
+    {
+        printf(".");
+    }
+    _mode = newMode;
+    printf ("Mode = %d\n", spiRead(RFM69_REG_01_OPMODE));
 }
 
 /*
