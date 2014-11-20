@@ -120,6 +120,7 @@ int main(int argc, char **argv)
 			printf("%s\n", Command);
 			system(Command);
 			
+#if 0
 			// Habitat upload
 			// 3dL51.95023,-2.54445,155[DA1]
 			if (strstr(Message, "DA1"))
@@ -138,6 +139,7 @@ int main(int argc, char **argv)
 					}
 				}
 			}
+#endif
 		}
 		else
 		{
