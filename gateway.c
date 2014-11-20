@@ -83,7 +83,7 @@ char *Now(void)
   return buffer;
 }
 
-void UploadPacket(char *Packet)
+void UploadPacket(char *Packet, int Rssi)
 {
 	CURL *curl;
 	CURLcode res;
@@ -99,7 +99,7 @@ void UploadPacket(char *Packet)
 		curl_easy_setopt(curl, CURLOPT_URL, "http://www.ukhas.net/api/upload");
 
 		/* Now specify the POST data */
-		sprintf(PostFields, "origin=DBPG&data=%s", Packet);
+		sprintf(PostFields, "origin=DBPG&data=%s&rssi=%d", Packet, Rssi);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostFields);
 
 		/* Perform the request, res will get the return code */
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 			printf ("Line = %s\n", Message);
 
 			// UKHASNet upload
-			UploadPacket(Message);
+			UploadPacket(Message,RFM69_lastRssi());
 			
 #if 0
 			// Habitat upload

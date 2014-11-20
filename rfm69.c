@@ -225,7 +225,7 @@ void rfm69_handleInterrupt()
 {
     // RX
     if(_mode == RFM69_MODE_RX) {
-        //_lastRssi = rssiRead();
+        _lastRssi = rssiRead();
         // PAYLOADREADY (incoming packet)
         if (spiRead(RFM69_REG_28_IRQ_FLAGS2) & RF_IRQFLAGS2_PAYLOADREADY)
 		{	
@@ -267,16 +267,12 @@ void RFM69::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len)
     digitalWrite(_slaveSelectPin, HIGH);
 }
 
-int RFM69::rssiRead()
-{
-    int rssi = 0;
-    //RSSI trigger not needed if DAGC is in continuous mode
-    rssi = -spiRead(RFM69_REG_24_RSSI_VALUE);
-    rssi >>= 1;
-    return rssi;
-}
-
 */
+
+int rssiRead()
+{
+    return -spiRead(RFM69_REG_24_RSSI_VALUE)/2;
+}
 
 uint8_t rfmM69_recv(uint8_t* buf, uint8_t len)
 {
@@ -351,10 +347,11 @@ void RFM69::readRxBuf()
     spiBurstRead(RFM69_REG_00_FIFO, _buf, RFM69_FIFO_SIZE);
     _bufLen += RFM69_FIFO_SIZE;
 }
+*/
 
-int RFM69::lastRssi()
+int RFM69_lastRssi()
 {
     return _lastRssi;
 }
-*/
+
 /* vim:set et sts=4 sw=4: */
