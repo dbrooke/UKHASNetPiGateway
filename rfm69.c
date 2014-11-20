@@ -148,49 +148,37 @@ void clearRxBuf()
 	
 boolean rfm69_init(int chan)
 {
-	int i;
-	
+    int i;
+
     _idleMode = RFM69_MODE_SLEEP; // Default idle state is SLEEP, our lowest power mode
     _mode = RFM69_MODE_RX; // We start up in RX mode
     _rxGood = 0;
     _rxBad = 0;
     _txGood = 0;
-	_channel = chan;
+    _channel = chan;
     _afterTxMode = RFM69_MODE_RX;
 
-    // delay(12);
-    // _slaveSelectPin = 10;
-    // pinMode(_slaveSelectPin, OUTPUT); // Init nSS
+    if (wiringPiSPISetup(_channel, 500000) < 0)
+    {
+        fprintf(stderr, "Failed to open SPI port.  Try loading spi library with 'gpio load spi'");
+        return false;
+    }
 
-    // delay(100);
+    // Check for device presence
+    if (spiRead(RFM69_REG_10_VERSION) != 0x24)
+    {
+        return false;
+    }
 
-	if (wiringPiSPISetup(_channel, 500000) < 0)
-	{
-		fprintf(stderr, "Failed to open SPI port.  Try loading spi library with 'gpio load spi'");
-		return false;
-	}
-	
-	/*
-    SPI.setDataMode(SPI_MODE0);
-    SPI.setBitOrder(MSBFIRST);
-    SPI.setClockDivider(SPI_CLOCK_DIV2);
-    SPI.begin();
-    */
-	
     // Set up device
     for (i=0; CONFIG[i][0] != 255; i++)
-	{
+    {
         spiWrite(CONFIG[i][0], CONFIG[i][1]);
     }
-	
+
     setMode(_mode);
 
-    // We should check for a device here, maybe set and check mode?
-    
-    //_interrupt.rise(this, &RFM69::isr0);
-    //attachInterrupt(0, RFM69::handleInterrupt, RISING);
-
-	clearTxBuf();
+    clearTxBuf();
     clearRxBuf();
 
     return true;
@@ -337,3 +325,4 @@ int RFM69::lastRssi()
     return _lastRssi;
 }
 */
+/* vim:set et sts=4 sw=4: */

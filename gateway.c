@@ -40,6 +40,7 @@ void setupRFM69()
 	if (!rfm69_init(0))
 	{
 		printf("RFM69 Failed\n");
+		exit(1);
 	}
 	else
 	{
