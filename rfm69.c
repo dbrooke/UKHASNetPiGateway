@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
@@ -18,6 +19,7 @@
 #include "rfm69.h"
 #include "rfm69config.h"
 
+#define RFM69_DIO0_PIN 0   // RasPi GPIO0 Pin
 #define RFM69_RESET_PIN 7  // RasPi GPIO7 Pin
 
     volatile uint8_t    _mode;
@@ -161,6 +163,14 @@ boolean rfm69_init(int chan)
     _channel = chan;
     _afterTxMode = RFM69_MODE_RX;
 
+    if (wiringPiSetup() < 0) {
+        fprintf (stderr, "Unable to setup wiringPi: %s\n", strerror (errno));
+        return false;
+    }
+    if ( wiringPiISR (RFM69_DIO0_PIN, INT_EDGE_RISING, &rfm69_handleInterrupt) < 0 ) {
+        fprintf (stderr, "Unable to setup ISR: %s\n", strerror (errno));
+        return false;
+    }
     if (wiringPiSPISetup(_channel, 500000) < 0)
     {
         fprintf(stderr, "Failed to open SPI port.  Try loading spi library with 'gpio load spi'");
@@ -192,6 +202,9 @@ boolean rfm69_init(int chan)
     }
 
     setMode(_mode);
+
+    // interrupt on PayloadReady
+    spiWrite(RFM69_REG_25_DIO_MAPPING1, RF_DIOMAPPING1_DIO0_01);
 
     clearTxBuf();
     clearRxBuf();

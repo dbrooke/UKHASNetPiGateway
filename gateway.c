@@ -132,8 +132,6 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		rfm69_handleInterrupt();
-		
 		if (rfm69_available())
 		{
 			Bytes = rfmM69_recv(Message, sizeof(Message));
