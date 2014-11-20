@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 			*/
 
 			// UKHASNet upload
-			sprintf(Command, "wget -O ukhasnet.txt \"http://www.ukhas.net/api/upload\" --post-data \"origin=DA0&data=%s\"",	Message);
+			sprintf(Command, "wget -O ukhasnet.txt \"http://www.ukhas.net/api/upload\" --post-data \"origin=DBPG&data=%s\"",	Message);
 			printf("%s\n", Command);
 			system(Command);
 			
