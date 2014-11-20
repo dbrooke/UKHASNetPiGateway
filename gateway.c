@@ -120,10 +120,13 @@ void UploadPacket(char *Packet, int Rssi)
 
 int main(int argc, char **argv)
 {
+	char spin[] = "-\\|/";
 	char Message[65], Data[100], Command[200], Telemetry[100], *Bracket, *Start;
-	int Bytes, Sentence_Count;
+	int Bytes, Sentence_Count, err_count = 0, sc = 0;
 	double Latitude, Longitude;
 	unsigned int Altitude;
+	uint8_t opmode, flags1, flags2, old_opmode = 0, old_flags1 = 0, old_flags2 = 0;
+
 	printf("**** UKHASNet Pi Gateway by daveake ****\n");
 	
 	setupRFM69();
@@ -135,39 +138,68 @@ int main(int argc, char **argv)
 		if (rfm69_available())
 		{
 			Bytes = rfmM69_recv(Message, sizeof(Message));
-			printf ("Data available - %d bytes\n", Bytes);
+			printf ("%s Data available - %d bytes\n", Now(), Bytes);
 			printf ("Line = %s\n", Message);
 
-			// UKHASNet upload
-			UploadPacket(Message,RFM69_lastRssi());
-			
-#if 0
-			// Habitat upload
-			// 3dL51.95023,-2.54445,155[DA1]
-			if (strstr(Message, "DA1"))
+			if (Bytes > 0)
 			{
-				if (Start = strchr(Message, 'L'))
-				{
-					// DA1,2,19:35:37,51.95023,-2.54445,160*05%0A
+				// UKHASNet upload
+				UploadPacket(Message,RFM69_lastRssi());
 
-					if (sscanf(Start+1, "%lf,%lf,%u[", &Latitude, &Longitude, &Altitude))
+#if 0
+				// Habitat upload
+				// 3dL51.95023,-2.54445,155[DA1]
+				if (strstr(Message, "DA1"))
+				{
+					if (Start = strchr(Message, 'L'))
 					{
-						printf("Altitude = %u\n", Altitude);
-						sprintf(Telemetry, "%s,%d,%s,%lf,%lf,%u", "DA1", ++Sentence_Count, Now(), Latitude, Longitude, Altitude);
-						sprintf(Command, "wget -O habitat.txt \"http://habitat.habhub.org/transition/payload_telemetry\" --post-data \"callsign=DA0&string=\\$\\$%s*%s%s&string_type=ascii&metadata={}\"",	Telemetry, Checksum(Telemetry), "\%0A");
-						printf("%s\n", Command);
-						system(Command);
+						// DA1,2,19:35:37,51.95023,-2.54445,160*05%0A
+
+						if (sscanf(Start+1, "%lf,%lf,%u[", &Latitude, &Longitude, &Altitude))
+						{
+							printf("Altitude = %u\n", Altitude);
+							sprintf(Telemetry, "%s,%d,%s,%lf,%lf,%u", "DA1", ++Sentence_Count, Now(), Latitude, Longitude, Altitude);
+							sprintf(Command, "wget -O habitat.txt \"http://habitat.habhub.org/transition/payload_telemetry\" --post-data \"callsign=DA0&string=\\$\\$%s*%s%s&string_type=ascii&metadata={}\"",	Telemetry, Checksum(Telemetry), "\%0A");
+							printf("%s\n", Command);
+							system(Command);
+						}
 					}
 				}
-			}
 #endif
+			}
 		}
 		else
 		{
-			printf ("Nothing\n");
-			sleep(1);
+			opmode = spiRead(RFM69_REG_01_OPMODE);
+			flags1 = spiRead(RFM69_REG_27_IRQ_FLAGS1);
+			flags2 = spiRead(RFM69_REG_28_IRQ_FLAGS2);
+			if ((opmode != old_opmode) || (flags1 != old_flags1) || (flags2 != old_flags2))
+			{
+				printf ("Registers: %02x, %02x, %02x\n", opmode, flags1, flags2);
+				old_opmode = opmode;
+				old_flags1 = flags1;
+				old_flags2 = flags2;
+			}
+			else
+			{
+				printf("\r%c",spin[sc++%4]);
+				fflush(stdout);
+			}
+			if (flags1 == 0xd8)
+			{
+				if (err_count++ > 3)
+				{
+					printf("Restart Rx\n");
+					spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
+				}
+			}
+			else
+			{
+				err_count = 0;
+			}
+			usleep(250000);
 		}
- 	}
+	}
 
 	return 0;
 }
