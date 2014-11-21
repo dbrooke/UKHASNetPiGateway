@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 {
 	char spin[] = "-\\|/";
 	char Message[65], Data[100], Command[200], Telemetry[100], *Bracket, *Start;
-	int Bytes, Sentence_Count, err_count = 0, sc = 0;
+	int Bytes, Sentence_Count, sc = 0;
 	double Latitude, Longitude;
 	unsigned int Altitude;
 	uint8_t opmode, flags1, flags2, old_opmode = 0, old_flags1 = 0, old_flags2 = 0;
@@ -185,17 +185,10 @@ int main(int argc, char **argv)
 				printf("\r%c",spin[sc++%4]);
 				fflush(stdout);
 			}
-			if (flags1 == 0xd8)
+			if (flags1 & RF_IRQFLAGS1_TIMEOUT)
 			{
-				if (err_count++ > 3)
-				{
-					printf("Restart Rx\n");
-					spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
-				}
-			}
-			else
-			{
-				err_count = 0;
+				printf("Restart Rx\n");
+				spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
 			}
 			usleep(250000);
 		}

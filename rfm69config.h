@@ -39,6 +39,16 @@ static const uint8_t CONFIG[][2] =
 
     { RFM69_REG_29_RSSI_THRESHOLD, 0xE4 }, // recommended default (Table 23 of datasheet)
 
+    /* receiver timeout:
+     * max packet length is 72 octets
+     * (3 preamble, 2 sync, 1 length, 64 message, 2 CRC)
+     * timeout interrupt is generated (value*16*Tbit) after RSSI interrupt if
+     * PayloadReady interrupt doesn't occur so a value of 36 would correspond
+     * to the packet duration but not allow for any other delays hence set to
+     * 40
+     */
+    { RFM69_REG_2B_RX_TIMEOUT2, 40 },
+
     // { RFM69_REG_2D_PREAMBLE_LSB, RF_PREAMBLESIZE_LSB_VALUE } // default 3 preamble bytes 0xAAAAAA
     
     //{ RFM69_REG_2E_SYNC_CONFIG, RF_SYNC_OFF | RF_SYNC_FIFOFILL_MANUAL }, // Sync bytes off
