@@ -36,7 +36,9 @@ static const uint8_t CONFIG[][2] =
     
     { RFM69_REG_25_DIO_MAPPING1, RF_DIOMAPPING1_DIO0_01 },
     { RFM69_REG_26_DIO_MAPPING2, RF_DIOMAPPING2_CLKOUT_OFF }, // Switch off Clkout
-    
+
+    { RFM69_REG_29_RSSI_THRESHOLD, 0xE4 }, // recommended default (Table 23 of datasheet)
+
     // { RFM69_REG_2D_PREAMBLE_LSB, RF_PREAMBLESIZE_LSB_VALUE } // default 3 preamble bytes 0xAAAAAA
     
     //{ RFM69_REG_2E_SYNC_CONFIG, RF_SYNC_OFF | RF_SYNC_FIFOFILL_MANUAL }, // Sync bytes off
