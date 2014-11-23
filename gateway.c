@@ -185,11 +185,6 @@ int main(int argc, char **argv)
 				printf("\r%c",spin[sc++%4]);
 				fflush(stdout);
 			}
-			if (flags1 & RF_IRQFLAGS1_TIMEOUT)
-			{
-				printf("Restart Rx\n");
-				spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
-			}
 			usleep(250000);
 		}
 	}

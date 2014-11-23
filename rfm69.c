@@ -20,6 +20,7 @@
 #include "rfm69config.h"
 
 #define RFM69_DIO0_PIN 0   // RasPi GPIO0 Pin
+#define RFM69_DIO4_PIN 4   // RasPi GPIO4 Pin
 #define RFM69_RESET_PIN 7  // RasPi GPIO7 Pin
 
     volatile uint8_t    _mode;
@@ -121,6 +122,15 @@ void setMode(uint8_t newMode)
     printf ("Mode = %d\n", spiRead(RFM69_REG_01_OPMODE));
 }
 
+void rfm69_handleTimeoutInterrupt()
+{
+    // RX
+    if(_mode == RFM69_MODE_RX) {
+        printf("Restart Rx\n");
+        spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
+    }
+}
+
 /*
 void RFM69::setModeSleep()
 {
@@ -174,6 +184,10 @@ boolean rfm69_init(int chan)
         return false;
     }
     if ( wiringPiISR (RFM69_DIO0_PIN, INT_EDGE_RISING, &rfm69_handleInterrupt) < 0 ) {
+        fprintf (stderr, "Unable to setup ISR: %s\n", strerror (errno));
+        return false;
+    }
+    if ( wiringPiISR (RFM69_DIO4_PIN, INT_EDGE_RISING, &rfm69_handleTimeoutInterrupt) < 0 ) {
         fprintf (stderr, "Unable to setup ISR: %s\n", strerror (errno));
         return false;
     }
