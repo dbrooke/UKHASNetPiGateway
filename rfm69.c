@@ -47,6 +47,7 @@
 
     volatile int        _lastRssi;
     volatile int        _floorRssi;
+    volatile uint8_t    _threshold_val;
 
 void spiWrite(uint8_t reg, uint8_t val)
 {
@@ -206,6 +207,7 @@ boolean rfm69_init(int chan)
         spiWrite(CONFIG[i][0], CONFIG[i][1]);
     }
 
+    _threshold_val = spiRead(RFM69_REG_29_RSSI_THRESHOLD);
     setMode(_mode);
 
     // interrupt on PayloadReady
@@ -281,7 +283,7 @@ int rssiRead()
 int rssiMeasure()
 {
     int count = 0;
-    uint8_t rssi_val, threshold_val;
+    uint8_t rssi_val;
 
     spiWrite(RFM69_REG_29_RSSI_THRESHOLD, 0xff);
     spiWrite(RFM69_REG_23_RSSI_CONFIG, RF_RSSI_START);
@@ -293,9 +295,16 @@ int rssiMeasure()
         }
     }
     rssi_val = spiRead(RFM69_REG_24_RSSI_VALUE);
-    threshold_val = rssi_val - 8;
-    //printf("threshold value %d\n", threshold_val);
-    spiWrite(RFM69_REG_29_RSSI_THRESHOLD, threshold_val);
+    if(rssi_val - 8 < _threshold_val)
+    {
+        _threshold_val--;
+    }
+    else
+    {
+        _threshold_val++;
+    }
+    printf("RSSI %d dBm, threshold %d dBm\n", -rssi_val/2, -_threshold_val/2);
+    spiWrite(RFM69_REG_29_RSSI_THRESHOLD, _threshold_val);
     spiWrite(RFM69_REG_3D_PACKET_CONFIG2, spiRead(RFM69_REG_3D_PACKET_CONFIG2) | RF_PACKET2_RXRESTART);
     return -rssi_val/2;
 }

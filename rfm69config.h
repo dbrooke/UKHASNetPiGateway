@@ -37,7 +37,7 @@ static const uint8_t CONFIG[][2] =
     { RFM69_REG_25_DIO_MAPPING1, RF_DIOMAPPING1_DIO0_01 },
     { RFM69_REG_26_DIO_MAPPING2, RF_DIOMAPPING2_CLKOUT_OFF }, // Switch off Clkout
 
-    { RFM69_REG_29_RSSI_THRESHOLD, 0xE4 }, // recommended default (Table 23 of datasheet)
+    { RFM69_REG_29_RSSI_THRESHOLD, 200 }, // -100dBm is closer to actual conditions
 
     /* receiver timeout:
      * max packet length is 72 octets
