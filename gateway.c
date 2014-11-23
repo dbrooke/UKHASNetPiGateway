@@ -130,6 +130,10 @@ int main(int argc, char **argv)
 
 	printf("**** UKHASNet Pi Gateway by daveake ****\n");
 	
+	// put the gateway on the map
+	sprintf(Message,"0aL%s[%s]", LOCATION_STRING, NODE_ID);
+	UploadPacket(Message,0);
+
 	setupRFM69();
 	
 	Sentence_Count = 0;
