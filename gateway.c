@@ -16,6 +16,7 @@
 
 #include "rfm69.h"
 #include "rfm69config.h"
+#include "nodeconfig.h"
 
 /*
 int AnalogRead (int chan)
@@ -99,7 +100,7 @@ void UploadPacket(char *Packet, int Rssi)
 		curl_easy_setopt(curl, CURLOPT_URL, "http://www.ukhas.net/api/upload");
 
 		/* Now specify the POST data */
-		sprintf(PostFields, "origin=DBPG&data=%s&rssi=%d", Packet, Rssi);
+		sprintf(PostFields, "origin=%s&data=%s&rssi=%d", NODE_ID, Packet, Rssi);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostFields);
 
 		/* Perform the request, res will get the return code */
