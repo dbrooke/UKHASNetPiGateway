@@ -309,7 +309,7 @@ int rssiMeasure()
         }
     }
     rssi_val = spiRead(RFM69_REG_24_RSSI_VALUE);
-    if(rssi_val - 8 < _threshold_val)
+    if(rssi_val - 6 < _threshold_val)
     {
         _threshold_val--;
     }
