@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 		{
 			Bytes = rfmM69_recv(Message, sizeof(Message));
 			printf ("%s Data available - %d bytes\n", Now(), Bytes);
-			printf ("Line = %s\n", Message);
+			printf ("rx: %s|%d\n", Message,RFM69_lastRssi());
 
 			if (Bytes > 0)
 			{
