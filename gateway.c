@@ -89,6 +89,7 @@ void UploadPacket(char *Packet, int Rssi)
 	CURL *curl;
 	CURLcode res;
 	char PostFields[200];
+	char *postPacket;
 
 	curl_global_init(CURL_GLOBAL_ALL);
 
@@ -100,11 +101,13 @@ void UploadPacket(char *Packet, int Rssi)
 		curl_easy_setopt(curl, CURLOPT_URL, "http://www.ukhas.net/api/upload");
 
 		/* Now specify the POST data */
-		sprintf(PostFields, "origin=%s&data=%s&rssi=%d", NODE_ID, Packet, Rssi);
+		postPacket = curl_easy_escape(curl,Packet,0);
+		sprintf(PostFields, "origin=%s&data=%s&rssi=%d", NODE_ID, postPacket, Rssi);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostFields);
 
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
+		curl_free(postPacket);
 
 		/* Check for errors */
 		if(res != CURLE_OK)
