@@ -84,6 +84,11 @@ char *Now(void)
   return buffer;
 }
 
+size_t my_dummy_write(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	return size * nmemb;
+}
+
 void UploadPacket(char *Packet, int Rssi)
 {
 	CURL *curl;
@@ -99,6 +104,9 @@ void UploadPacket(char *Packet, int Rssi)
 	{
 		/* First set the URL that is about to receive our POST */
 		curl_easy_setopt(curl, CURLOPT_URL, "http://www.ukhas.net/api/upload");
+
+		/* use custom write function to discard response which would otherwise be printed on stdout */
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &my_dummy_write);
 
 		/* Now specify the POST data */
 		postPacket = curl_easy_escape(curl,Packet,0);
