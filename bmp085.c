@@ -231,6 +231,7 @@ unsigned int bmp085_GetTemperature(unsigned int ut)
 	return result;
 }
 
+#if 0
 int main(int argc, char **argv)
 {
 	bmp085_Calibration();
@@ -241,3 +242,4 @@ int main(int argc, char **argv)
 	printf("Pressure\t%0.2fhPa\n", ((double)pressure)/100);
 	return 0;
 }
+#endif

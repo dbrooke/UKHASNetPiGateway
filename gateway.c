@@ -124,18 +124,22 @@ void UploadPacket(char *Packet, int Rssi)
 
 int main(int argc, char **argv)
 {
-	char spin[] = "-\\|/";
+	char spin[] = "-\\|/", SequenceCount = 'a';
 	char Message[65], Data[100], Command[200], Telemetry[100], *Bracket, *Start;
 	int Bytes, Sentence_Count, sc = 0;
 	double Latitude, Longitude;
 	unsigned int Altitude;
 	uint8_t opmode, flags1, flags2, old_opmode = 0, old_flags1 = 0, old_flags2 = 0;
+	time_t next_beacon;
 
 	printf("**** UKHASNet Pi Gateway by daveake ****\n");
 	
 	// put the gateway on the map
 	sprintf(Message,"0aL%s[%s]", LOCATION_STRING, NODE_ID);
 	UploadPacket(Message,0);
+	next_beacon = time(NULL) + 10;
+
+	bmp085_Calibration();
 
 	setupRFM69();
 	
@@ -192,6 +196,16 @@ int main(int argc, char **argv)
 			{
 				printf("\r%c",spin[sc++%4]);
 				fflush(stdout);
+			}
+			if (time(NULL) > next_beacon)
+			{
+				if (SequenceCount++ > 'z')
+				{
+					SequenceCount = 'b';
+				}
+				sprintf(Message,"0%cT%0.1fP%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), NODE_ID);
+				UploadPacket(Message,0);
+				next_beacon = time(NULL) + 300;
 			}
 			usleep(250000);
 		}
