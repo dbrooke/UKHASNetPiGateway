@@ -207,7 +207,7 @@ int main(int argc, char **argv)
 			}
 			if (time(NULL) > next_beacon)
 			{
-				if (SequenceCount++ > 'z')
+				if (++SequenceCount > 'z')
 				{
 					SequenceCount = 'b';
 				}
