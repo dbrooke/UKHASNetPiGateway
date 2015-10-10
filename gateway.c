@@ -142,9 +142,12 @@ int main(int argc, char **argv)
 
 	printf("**** UKHASNet Pi Gateway by daveake ****\n");
 	
+	xapInit();
+
 	// put the gateway on the map
 	sprintf(Message,"0aL%s[%s]", LOCATION_STRING, NODE_ID);
 	UploadPacket(Message,0);
+	xapSendPacket(Message, 0);
 	next_beacon = time(NULL) + 10;
 
 	bmp085_Calibration();
@@ -166,6 +169,8 @@ int main(int argc, char **argv)
 				// UKHASNet upload
 				UploadPacket(Message,RFM69_lastRssi());
 
+				// xAP broadcast
+				xapSendPacket(Message, RFM69_lastRssi());
 #if 0
 				// Habitat upload
 				// 3dL51.95023,-2.54445,155[DA1]
@@ -213,8 +218,10 @@ int main(int argc, char **argv)
 				}
 				sprintf(Message,"0%cT%0.1fP%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), NODE_ID);
 				UploadPacket(Message,0);
+				xapSendPacket(Message, 0);
 				next_beacon = time(NULL) + 300;
 			}
+			xapCheckHbeat();
 			usleep(250000);
 		}
 	}
