@@ -150,10 +150,16 @@ int main(int argc, char **argv)
 	xapSendPacket(Message, 0);
 	next_beacon = time(NULL) + 10;
 
+	printf("Initialising BMP085\n");
+
 	bmp085_Calibration();
+
+	printf("Initialising RFM69\n");
 
 	setupRFM69();
 	
+	printf("Starting main loop ...\n");
+
 	Sentence_Count = 0;
 
 	while (1)
