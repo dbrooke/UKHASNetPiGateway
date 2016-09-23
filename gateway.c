@@ -222,7 +222,7 @@ int main(int argc, char **argv)
 				{
 					SequenceCount = 'b';
 				}
-				sprintf(Message,"0%cT%0.1fP%dR,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), -_threshold_val/2, NODE_ID);
+				sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, NODE_ID);
 				UploadPacket(Message,0);
 				next_beacon = time(NULL) + 300;
 			}
