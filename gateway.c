@@ -18,7 +18,7 @@
 #include "rfm69config.h"
 #include "nodeconfig.h"
 
-extern volatile int _threshold_val;
+extern volatile uint8_t _threshold_val;
 
 /*
 int AnalogRead (int chan)
