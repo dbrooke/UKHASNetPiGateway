@@ -18,6 +18,8 @@
 #include "rfm69config.h"
 #include "nodeconfig.h"
 
+extern volatile int _threshold_val;
+
 /*
 int AnalogRead (int chan)
 {
@@ -108,8 +110,8 @@ void UploadPacket(char *Packet, int Rssi)
 		/* use custom write function to discard response which would otherwise be printed on stdout */
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &my_dummy_write);
 
-		/* set transaction timeout of 20 seconds */
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+		/* set transaction timeout of 10 seconds */
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
 		/* Now specify the POST data */
 		postPacket = curl_easy_escape(curl,Packet,0);
@@ -225,7 +227,7 @@ int main(int argc, char **argv)
 				{
 					SequenceCount = 'b';
 				}
-				sprintf(Message,"0%cT%0.1fP%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), NODE_ID);
+				sprintf(Message,"0%cT%0.1fP%dR,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), -_threshold_val/2, NODE_ID);
 				UploadPacket(Message,0);
 				xapSendPacket(Message, 0);
 				next_beacon = time(NULL) + 300;
