@@ -108,8 +108,8 @@ void UploadPacket(char *Packet, int Rssi)
 		/* use custom write function to discard response which would otherwise be printed on stdout */
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &my_dummy_write);
 
-		/* set transaction timeout of 20 seconds */
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+		/* set transaction timeout of 10 seconds */
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
 		/* Now specify the POST data */
 		postPacket = curl_easy_escape(curl,Packet,0);
