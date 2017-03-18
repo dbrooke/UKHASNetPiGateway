@@ -6,3 +6,6 @@ gateway.o: gateway.c rfm69.h rfm69config.h nodeconfig.h
 
 rfm69.o: rfm69.c rfm69.h rfm69config.h
 	gcc -c rfm69.c
+
+clean:
+	rm *.o gateway
