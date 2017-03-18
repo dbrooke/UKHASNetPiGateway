@@ -16,7 +16,9 @@
 
 #include "rfm69.h"
 #include "rfm69config.h"
-#include "nodeconfig.h"
+#include "minIni.h"
+
+char node_id[20];
 
 /*
 int AnalogRead (int chan)
@@ -113,7 +115,7 @@ void UploadPacket(char *Packet, int Rssi)
 
 		/* Now specify the POST data */
 		postPacket = curl_easy_escape(curl,Packet,0);
-		sprintf(PostFields, "origin=%s&data=%s&rssi=%d", NODE_ID, postPacket, Rssi);
+		sprintf(PostFields, "origin=%s&data=%s&rssi=%d", node_id, postPacket, Rssi);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, PostFields);
 
 		/* Perform the request, res will get the return code */
@@ -141,12 +143,24 @@ int main(int argc, char **argv)
 	double Latitude, Longitude;
 	unsigned int Altitude;
 	uint8_t opmode, flags1, flags2, old_opmode = 0, old_flags1 = 0, old_flags2 = 0;
+	const char *inifile = "gateway.ini"; // FIXME
+	float node_lat, node_lon;
 
-	printf("**** UKHASNet Pi Gateway by daveake ****\n");
+	/* load configuration */
+	ini_gets("node", "id", "", node_id, sizeof(node_id), inifile);
+	node_lat = ini_getf("node", "lat", 999, inifile);
+	node_lon = ini_getf("node", "lon", 999, inifile);
 	
-	// put the gateway on the map
-	sprintf(Message,"0aL%s[%s]", LOCATION_STRING, NODE_ID);
-	UploadPacket(Message,0);
+	if (strlen(node_id) == 0) {
+		puts("Node ID has not been specified");
+		exit(1);
+	}
+
+	if (node_lat < 900 && node_lon < 900) {
+		/* put the gateway on the map */
+		sprintf(Message,"0aL%f,%f[%s]", node_lat, node_lon, node_id);
+		UploadPacket(Message,0);
+	}
 
 	setupRFM69();
 	

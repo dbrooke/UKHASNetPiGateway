@@ -1,2 +1,0 @@
-#define NODE_ID "UNDEFINED"
-#define LOCATION_STRING "0.0000,0.0000"

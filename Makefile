@@ -1,11 +1,8 @@
-gateway: gateway.o rfm69.o
-	cc -o gateway gateway.o rfm69.o -lm -lwiringPi -lwiringPiDev -lcurl
+CFLAGS+=-IminIni/dev
+LDFLAGS=-lm -lwiringPi -lwiringPiDev -lcurl
 
-gateway.o: gateway.c rfm69.h rfm69config.h nodeconfig.h
-	gcc -c gateway.c
-
-rfm69.o: rfm69.c rfm69.h rfm69config.h
-	gcc -c rfm69.c
+gateway: gateway.o rfm69.o minIni/dev/minIni.c
+	$(CC) -o gateway gateway.o rfm69.o minIni/dev/minIni.c $(LDFLAGS)
 
 clean:
 	rm *.o gateway
