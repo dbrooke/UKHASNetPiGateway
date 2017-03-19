@@ -149,23 +149,33 @@ int main(int argc, char **argv)
 	const char *inifile = "gateway.ini"; // FIXME
 	float node_lat, node_lon;
 	time_t next_beacon;
-	bool bmp085;
+	bool bmp085, xap;
 
 	/* load configuration */
 	ini_gets("node", "id", "", node_id, sizeof(node_id), inifile);
 	node_lat = ini_getf("node", "lat", 999, inifile);
 	node_lon = ini_getf("node", "lon", 999, inifile);
 	bmp085 = ini_getbool("sensors", "bmp085", false, inifile);
+	xap = ini_getbool("xap", "enabled", false, inifile);
 	
 	if (strlen(node_id) == 0) {
 		puts("Node ID has not been specified");
 		exit(1);
 	}
 
+	if (xap) {
+		xapInit();
+	}
+
+	next_beacon = time(NULL) + 10;
+
 	if (node_lat < 900 && node_lon < 900) {
 		/* put the gateway on the map */
 		sprintf(Message,"0aL%f,%f[%s]", node_lat, node_lon, node_id);
 		UploadPacket(Message,0);
+		if (xap) {
+			xapSendPacket(Message, 0);
+		}
 	}
 
 	if (bmp085) {
@@ -195,6 +205,10 @@ int main(int argc, char **argv)
 				// UKHASNet upload
 				UploadPacket(Message,RFM69_lastRssi());
 
+				if (xap) {
+					// xAP broadcast
+					xapSendPacket(Message, RFM69_lastRssi());
+				}
 #if 0
 				// Habitat upload
 				// 3dL51.95023,-2.54445,155[DA1]
@@ -242,7 +256,13 @@ int main(int argc, char **argv)
 				}
 				sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, node_id);
 				UploadPacket(Message,0);
+				if (xap) {
+					xapSendPacket(Message, 0);
+				}
 				next_beacon = time(NULL) + 300;
+			}
+			if (xap) {
+				xapCheckHbeat();
 			}
 			usleep(250000);
 		}
