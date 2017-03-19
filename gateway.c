@@ -11,6 +11,7 @@
 #include <sys/shm.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <time.h>
 
 
@@ -19,6 +20,8 @@
 #include "minIni.h"
 
 char node_id[20];
+
+extern volatile uint8_t _threshold_val;
 
 /*
 int AnalogRead (int chan)
@@ -137,7 +140,7 @@ void UploadPacket(char *Packet, int Rssi)
 
 int main(int argc, char **argv)
 {
-	char spin[] = "-\\|/";
+	char spin[] = "-\\|/", SequenceCount = 'a';
 	char Message[65], Data[100], Command[200], Telemetry[100], *Bracket, *Start;
 	int Bytes, Sentence_Count, sc = 0;
 	double Latitude, Longitude;
@@ -145,11 +148,14 @@ int main(int argc, char **argv)
 	uint8_t opmode, flags1, flags2, old_opmode = 0, old_flags1 = 0, old_flags2 = 0;
 	const char *inifile = "gateway.ini"; // FIXME
 	float node_lat, node_lon;
+	time_t next_beacon;
+	bool bmp085;
 
 	/* load configuration */
 	ini_gets("node", "id", "", node_id, sizeof(node_id), inifile);
 	node_lat = ini_getf("node", "lat", 999, inifile);
 	node_lon = ini_getf("node", "lon", 999, inifile);
+	bmp085 = ini_getbool("sensors", "bmp085", false, inifile);
 	
 	if (strlen(node_id) == 0) {
 		puts("Node ID has not been specified");
@@ -162,8 +168,18 @@ int main(int argc, char **argv)
 		UploadPacket(Message,0);
 	}
 
+	if (bmp085) {
+		next_beacon = time(NULL) + 10;
+		printf("Initialising BMP085\n");
+		bmp085_Calibration();
+	}
+
+	printf("Initialising RFM69\n");
+
 	setupRFM69();
 	
+	printf("Starting main loop ...\n");
+
 	Sentence_Count = 0;
 
 	while (1)
@@ -217,6 +233,16 @@ int main(int argc, char **argv)
 			{
 				printf("\r%c",spin[sc++%4]);
 				fflush(stdout);
+			}
+			if (bmp085 && time(NULL) > next_beacon)
+			{
+				if (++SequenceCount > 'z')
+				{
+					SequenceCount = 'b';
+				}
+				sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, node_id);
+				UploadPacket(Message,0);
+				next_beacon = time(NULL) + 300;
 			}
 			usleep(250000);
 		}
