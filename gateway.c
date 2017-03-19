@@ -167,8 +167,6 @@ int main(int argc, char **argv)
 		xapInit();
 	}
 
-	next_beacon = time(NULL) + 10;
-
 	if (node_lat < 900 && node_lon < 900) {
 		/* put the gateway on the map */
 		sprintf(Message,"0aL%f,%f[%s]", node_lat, node_lon, node_id);
