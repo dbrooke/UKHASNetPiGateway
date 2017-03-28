@@ -21,7 +21,7 @@ extern char node_id[];
 
 void xapInit()
 {
-        fdSocket = xapSetup("81.187.207.221");
+        fdSocket = xapSetup("");
         sprintf(strUID, "FF690000");
         sprintf(strSource, "DB.UKHASnet.%s", node_id);
 }
