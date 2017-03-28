@@ -169,11 +169,14 @@ int main(int argc, char **argv)
 
 	if (node_lat < 900 && node_lon < 900) {
 		/* put the gateway on the map */
-		sprintf(Message,"0aL%f,%f[%s]", node_lat, node_lon, node_id);
-		UploadPacket(Message,0);
-		if (xap) {
-			xapSendPacket(Message, 0);
-		}
+		sprintf(Message,"0aL%f,%f:%s[%s]", node_lat, node_lon, GIT_VER, node_id);
+	} else {
+		sprintf(Message,"0a:%s[%s]", GIT_VER, node_id);
+	}
+
+	UploadPacket(Message,0);
+	if (xap) {
+		xapSendPacket(Message, 0);
 	}
 
 	if (bmp085) {
