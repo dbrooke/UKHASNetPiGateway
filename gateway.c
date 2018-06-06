@@ -138,10 +138,43 @@ void UploadPacket(char *Packet, int Rssi)
 	curl_global_cleanup();
 }
 
+bool excluded(char *message, char *exclude)
+{
+	bool rv;
+	char *m, *s;
+
+	m = strdup(message);
+
+	if (strlen(exclude) == 0) {
+		/* nothing is excluded */
+		rv = false;
+	}
+	else if ((s = strtok(m, "[")) == NULL) {
+		/* m has no node ID */
+		rv = true;
+	}
+	else if ((s = strtok(NULL, ",]")) == NULL) {
+		/* m has no terminator for node ID */
+		rv = true;
+	}
+	else if (strstr(exclude, s) == NULL) {
+		/* no match for node ID */
+		rv = false;
+	}
+	else {
+		/* natch for node ID */
+		printf("Excluding \"%s\"\n", s);
+		rv = true;
+	}
+
+	free(m);
+	return rv;
+}
+
 int main(int argc, char **argv)
 {
 	char spin[] = "-\\|/", SequenceCount = 'a';
-	char Message[65], Data[100], Command[200], Telemetry[100], *Bracket, *Start;
+	char Message[65], Data[100], upload_exclude[200], Command[200], Telemetry[100], *Bracket, *Start;
 	int Bytes, Sentence_Count, sc = 0;
 	double Latitude, Longitude;
 	unsigned int Altitude;
@@ -157,11 +190,14 @@ int main(int argc, char **argv)
 	node_lon = ini_getf("node", "lon", 999, inifile);
 	bmp085 = ini_getbool("sensors", "bmp085", false, inifile);
 	xap = ini_getbool("xap", "enabled", false, inifile);
+	ini_gets("upload", "exclude", "", upload_exclude, sizeof(upload_exclude), inifile);
 	
 	if (strlen(node_id) == 0) {
 		puts("Node ID has not been specified");
 		exit(1);
 	}
+
+	printf("Upload exclude list is \"%s\"\n", upload_exclude);
 
 	if (xap) {
 		xapInit();
@@ -203,8 +239,10 @@ int main(int argc, char **argv)
 
 			if (Bytes > 0)
 			{
-				// UKHASNet upload
-				UploadPacket(Message,RFM69_lastRssi());
+				if (!excluded(Message, upload_exclude)) {
+					// UKHASNet upload
+					UploadPacket(Message, RFM69_lastRssi());
+				}
 
 				if (xap) {
 					// xAP broadcast
