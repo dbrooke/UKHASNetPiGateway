@@ -18,6 +18,7 @@
 #include "rfm69.h"
 #include "rfm69config.h"
 #include "bmp085.h"
+#include "mqtt.h"
 
 char node_id[20];
 
@@ -175,6 +176,8 @@ int main(int argc, char **argv)
 {
 	char spin[] = "-\\|/", SequenceCount = 'a';
 	char Message[65], Data[100], upload_exclude[200], Command[200], Telemetry[100], *Bracket, *Start;
+	char mqtt_host[64], mqtt_user[64], mqtt_pass[64], mqtt_topic[32];
+	long mqtt_port;
 	int Bytes, Sentence_Count, sc = 0;
 	double Latitude, Longitude;
 	unsigned int Altitude;
@@ -182,7 +185,7 @@ int main(int argc, char **argv)
 	const char *inifile = "gateway.ini"; // FIXME
 	float node_lat, node_lon;
 	time_t next_beacon;
-	bool bmp085;
+	bool bmp085, mqtt;
 
 	/* load configuration */
 	ini_gets("node", "id", "", node_id, sizeof(node_id), inifile);
@@ -190,6 +193,11 @@ int main(int argc, char **argv)
 	node_lon = ini_getf("node", "lon", 999, inifile);
 	bmp085 = ini_getbool("sensors", "bmp085", false, inifile);
 	ini_gets("upload", "exclude", "", upload_exclude, sizeof(upload_exclude), inifile);
+	ini_gets("mqtt", "host", "", mqtt_host, sizeof(mqtt_host), inifile);
+	mqtt_port = ini_getl("mqtt", "port", 1883, inifile);
+	ini_gets("mqtt", "user", "", mqtt_user, sizeof(mqtt_user), inifile);
+	ini_gets("mqtt", "pass", "", mqtt_pass, sizeof(mqtt_pass), inifile);
+	ini_gets("mqtt", "topic", "test", mqtt_topic, sizeof(mqtt_topic), inifile);
 	
 	if (strlen(node_id) == 0) {
 		puts("Node ID has not been specified");
@@ -197,6 +205,13 @@ int main(int argc, char **argv)
 	}
 
 	printf("Upload exclude list is \"%s\"\n", upload_exclude);
+
+	mqtt = (strlen(mqtt_host) > 0) && (strlen(mqtt_topic) > 0);
+
+	if(mqtt) {
+		puts("Enabling MQTT");
+		mqtt_init(mqtt_host, mqtt_port, mqtt_user, mqtt_pass, mqtt_topic);
+	}
 
 	if (node_lat < 900 && node_lon < 900) {
 		/* put the gateway on the map */
@@ -206,6 +221,10 @@ int main(int argc, char **argv)
 	}
 
 	UploadPacket(Message,0);
+
+	if (mqtt) {
+		mqtt_publish(mqtt_topic, Message, 0);
+	}
 
 	if (bmp085) {
 		next_beacon = time(NULL) + 10;
@@ -236,6 +255,9 @@ int main(int argc, char **argv)
 					UploadPacket(Message, RFM69_lastRssi());
 				}
 
+				if (mqtt) {
+					mqtt_publish(mqtt_topic, Message, RFM69_lastRssi());
+				}
 #if 0
 				// Habitat upload
 				// 3dL51.95023,-2.54445,155[DA1]
@@ -283,9 +305,16 @@ int main(int argc, char **argv)
 				}
 				sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, node_id);
 				UploadPacket(Message,0);
+				if (mqtt) {
+					mqtt_publish(mqtt_topic, Message, RFM69_lastRssi());
+				}
 				next_beacon = time(NULL) + 300;
 			}
-			usleep(250000);
+			if (mqtt) {
+				mqtt_loop();
+			} else {
+				usleep(250000);
+			}
 		}
 	}
 
