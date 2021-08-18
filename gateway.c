@@ -42,10 +42,10 @@ int AnalogRead (int chan)
 }
 */
 
-void setupRFM69()
+void setupRFM69(int reset_pin, int dio0_pin, int dio4_pin)
 {  
   
-	if (!rfm69_init(0))
+	if (!rfm69_init(0, reset_pin, dio0_pin, dio4_pin))
 	{
 		printf("RFM69 Failed\n");
 		exit(1);
@@ -186,6 +186,7 @@ int main(int argc, char **argv)
 	float node_lat, node_lon;
 	time_t next_beacon;
 	bool bmp085, mqtt;
+	int reset_pin, dio0_pin, dio4_pin;
 
 	/* load configuration */
 	ini_gets("node", "id", "", node_id, sizeof(node_id), inifile);
@@ -198,6 +199,9 @@ int main(int argc, char **argv)
 	ini_gets("mqtt", "user", "", mqtt_user, sizeof(mqtt_user), inifile);
 	ini_gets("mqtt", "pass", "", mqtt_pass, sizeof(mqtt_pass), inifile);
 	ini_gets("mqtt", "topic", "test", mqtt_topic, sizeof(mqtt_topic), inifile);
+	reset_pin = ini_getl("gpio", "reset", 7, inifile);
+	dio0_pin = ini_getl("gpio", "dio0", 0, inifile);
+	dio4_pin = ini_getl("gpio", "dio4", 4, inifile);
 	
 	if (strlen(node_id) == 0) {
 		puts("Node ID has not been specified");
@@ -232,9 +236,9 @@ int main(int argc, char **argv)
 		bmp085_Calibration();
 	}
 
-	printf("Initialising RFM69\n");
+	printf("Initialising RFM69 with WiringPi pins RESET = %d, DIO0 = %d, DIO4 = %d\n", reset_pin, dio0_pin, dio4_pin);
 
-	setupRFM69();
+	setupRFM69(reset_pin, dio0_pin, dio4_pin);
 	
 	printf("Starting main loop ...\n");
 

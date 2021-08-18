@@ -20,10 +20,6 @@
 #include "rfm69.h"
 #include "rfm69config.h"
 
-#define RFM69_DIO0_PIN 0   // RasPi GPIO0 Pin
-#define RFM69_DIO4_PIN 4   // RasPi GPIO4 Pin
-#define RFM69_RESET_PIN 7  // RasPi GPIO7 Pin
-
     volatile uint8_t    _mode;
 
     uint8_t             _sleepMode;
@@ -168,7 +164,7 @@ void clearRxBuf()
     // interrupts();     // Enable Interrupts
 }
 	
-boolean rfm69_init(int chan)
+boolean rfm69_init(int chan, int reset_pin, int dio0_pin, int dio4_pin)
 {
     int i;
 
@@ -184,11 +180,11 @@ boolean rfm69_init(int chan)
         fprintf (stderr, "Unable to setup wiringPi: %s\n", strerror (errno));
         return false;
     }
-    if ( wiringPiISR (RFM69_DIO0_PIN, INT_EDGE_RISING, &rfm69_handleInterrupt) < 0 ) {
+    if ( wiringPiISR (dio0_pin, INT_EDGE_RISING, &rfm69_handleInterrupt) < 0 ) {
         fprintf (stderr, "Unable to setup ISR: %s\n", strerror (errno));
         return false;
     }
-    if ( wiringPiISR (RFM69_DIO4_PIN, INT_EDGE_RISING, &rfm69_handleTimeoutInterrupt) < 0 ) {
+    if ( wiringPiISR (dio4_pin, INT_EDGE_RISING, &rfm69_handleTimeoutInterrupt) < 0 ) {
         fprintf (stderr, "Unable to setup ISR: %s\n", strerror (errno));
         return false;
     }
@@ -200,13 +196,13 @@ boolean rfm69_init(int chan)
 
     // Reset device
     // first drive pin high
-    pinMode(RFM69_RESET_PIN, OUTPUT);
-    digitalWrite(RFM69_RESET_PIN, HIGH);
+    pinMode(reset_pin, OUTPUT);
+    digitalWrite(reset_pin, HIGH);
     // pause for 100 microseconds
     usleep(100);
     // release pin
-    pullUpDnControl(RFM69_RESET_PIN, PUD_OFF);
-    pinMode(RFM69_RESET_PIN, INPUT);
+    pullUpDnControl(reset_pin, PUD_OFF);
+    pinMode(reset_pin, INPUT);
     // pause for 5 ms
     usleep(5000);
 

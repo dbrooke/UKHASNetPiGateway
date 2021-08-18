@@ -14,7 +14,7 @@ typedef int boolean;
 #define false 0
 
 // Functions
-extern boolean rfm69_init(int chan);
+extern boolean rfm69_init(int chan, int reset_pin, int dio0_pin, int dio4_pin);
 extern boolean rfm69_available();
 extern void rfm69_handleInterrupt();
 extern uint8_t rfmM69_recv(uint8_t* buf, uint8_t len);
