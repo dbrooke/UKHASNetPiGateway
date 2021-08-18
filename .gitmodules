@@ -1,6 +1,0 @@
-[submodule "minIni"]
-	path = minIni
-	url = https://github.com/compuphase/minIni.git
-[submodule "opnode-libxap"]
-	path = opnode-libxap
-	url = https://github.com/dbrooke/opnode-libxap.git

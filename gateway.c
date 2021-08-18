@@ -13,11 +13,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
-
+#include <minIni/minIni.h>
 
 #include "rfm69.h"
 #include "rfm69config.h"
-#include "minIni.h"
+#include "bmp085.h"
 
 char node_id[20];
 
@@ -162,7 +162,7 @@ bool excluded(char *message, char *exclude)
 		rv = false;
 	}
 	else {
-		/* natch for node ID */
+		/* match for node ID */
 		printf("Excluding \"%s\"\n", s);
 		rv = true;
 	}
@@ -182,14 +182,13 @@ int main(int argc, char **argv)
 	const char *inifile = "gateway.ini"; // FIXME
 	float node_lat, node_lon;
 	time_t next_beacon;
-	bool bmp085, xap;
+	bool bmp085;
 
 	/* load configuration */
 	ini_gets("node", "id", "", node_id, sizeof(node_id), inifile);
 	node_lat = ini_getf("node", "lat", 999, inifile);
 	node_lon = ini_getf("node", "lon", 999, inifile);
 	bmp085 = ini_getbool("sensors", "bmp085", false, inifile);
-	xap = ini_getbool("xap", "enabled", false, inifile);
 	ini_gets("upload", "exclude", "", upload_exclude, sizeof(upload_exclude), inifile);
 	
 	if (strlen(node_id) == 0) {
@@ -199,10 +198,6 @@ int main(int argc, char **argv)
 
 	printf("Upload exclude list is \"%s\"\n", upload_exclude);
 
-	if (xap) {
-		xapInit();
-	}
-
 	if (node_lat < 900 && node_lon < 900) {
 		/* put the gateway on the map */
 		sprintf(Message,"0aL%f,%f:%s[%s]", node_lat, node_lon, GIT_VER, node_id);
@@ -211,9 +206,6 @@ int main(int argc, char **argv)
 	}
 
 	UploadPacket(Message,0);
-	if (xap) {
-		xapSendPacket(Message, 0);
-	}
 
 	if (bmp085) {
 		next_beacon = time(NULL) + 10;
@@ -235,7 +227,7 @@ int main(int argc, char **argv)
 		{
 			Bytes = rfmM69_recv(Message, sizeof(Message));
 			printf ("%s Data available - %d bytes\n", Now(), Bytes);
-			printf ("rx: %s|%d\n", Message,RFM69_lastRssi());
+			printf ("rx: %s|%d\n", Message, RFM69_lastRssi());
 
 			if (Bytes > 0)
 			{
@@ -244,10 +236,6 @@ int main(int argc, char **argv)
 					UploadPacket(Message, RFM69_lastRssi());
 				}
 
-				if (xap) {
-					// xAP broadcast
-					xapSendPacket(Message, RFM69_lastRssi());
-				}
 #if 0
 				// Habitat upload
 				// 3dL51.95023,-2.54445,155[DA1]
@@ -295,13 +283,7 @@ int main(int argc, char **argv)
 				}
 				sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, node_id);
 				UploadPacket(Message,0);
-				if (xap) {
-					xapSendPacket(Message, 0);
-				}
 				next_beacon = time(NULL) + 300;
-			}
-			if (xap) {
-				xapCheckHbeat();
 			}
 			usleep(250000);
 		}
