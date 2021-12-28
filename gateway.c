@@ -301,13 +301,17 @@ int main(int argc, char **argv)
 				printf("\r%c",spin[sc++%4]);
 				fflush(stdout);
 			}
-			if (bmp085 && time(NULL) > next_beacon)
+			if (time(NULL) > next_beacon)
 			{
 				if (++SequenceCount > 'z')
 				{
 					SequenceCount = 'b';
 				}
-				sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, node_id);
+				if(bmp085) {
+					sprintf(Message,"0%cT%0.1fP%dR%d,%d[%s]", SequenceCount, (double)bmp085_GetTemperature(bmp085_ReadUT())/10, bmp085_GetPressure(bmp085_ReadUP()), RFM69_lastRssi(), -_threshold_val/2, node_id);
+				} else {
+					sprintf(Message,"0%cR%d,%d[%s]", SequenceCount, RFM69_lastRssi(), -_threshold_val/2, node_id);
+				}
 				UploadPacket(Message,0);
 				if (mqtt) {
 					mqtt_publish(mqtt_topic, Message, RFM69_lastRssi());
